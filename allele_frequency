@@ -1,0 +1,62 @@
+import os
+
+#Set working directory to folder containing data files
+os.chdir('insert genotyping data')
+
+#Define the file parth for SNP list
+file_path = 'insert path for SNP list'
+
+#Read SNPs from file
+with open(file_path, "r") as file:
+    snps = [line.strip() for line in file]
+
+#Initialize empty lists to store genotypes and file names
+genotypes = [[] for _ in snps]
+file_names = [[] for _ in snps]
+
+for i, snp in enumerate (snps[:-1]):
+    #Loop through each file in directory
+    for file_name in os.listdir():
+        # Calculate percentage of completion
+        progress = (os.listdir().index(file_name) + 1) / len(os.listdir()) * 100
+
+        print(f"Processing file {file_name} using SNP {snp} - Progress {progress:.2f}%")
+
+        # Read in data from file
+        try:
+            with open(file_name, "r") as file_data:
+                #Extract rows associated with SNP rsid
+                rsid_data = [line.split() for line in file_data if line.split()[0] == snp]
+
+                #If rsid appears twice in file, grab the genotype where it is not '--'
+                if len(rsid_data) == 2:
+                    rsid_data = [row for row in rsid_data if row[3] != "--"]
+
+                #Extract genotypes associated with SNP rsid
+                rsid_genotypes = [row[3] for row in rsid_data]
+
+                #If rsid is present in file, add genotypes and file name to lists
+                if rsid_genotypes:
+                    genotypes[i].extend(rsid_genotypes)
+                    file_names[i].extend([file_name] * len(rsid_genotypes))
+        except Exception as e:
+            print(f"Error processing file: {file_name}")
+
+#Create a new text file to write the results
+painel_file = "painel.txt"
+with open(painel_cardio_file, "w") as file_conn:
+    #Print results for each SNP to the new text file
+    for i, snp in enumerate(snps):
+        file_conn.write(f"Results for SNP {snp}:\n\n")
+
+        #Format output as CLUB\t rsID\t Genótipo
+        for j, genotype in enumerate(genotypes[i]):
+            id_club = file_names[i][j][:10] if 'CLUBOO' in file_names[i][j] else file_names[i][j]
+            rsid = snp
+            genotipo = genotype
+
+            file_conn.write(f'{id_club}\t{rsid}\t{genotipo}\n')
+
+        file_conn.write('\n')
+
+print("Processo concluido")
